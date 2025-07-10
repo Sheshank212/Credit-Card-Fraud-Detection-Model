@@ -1,0 +1,47 @@
+groups:
+  - name: fraud_detection_alerts
+    rules:
+      - alert: HighFraudRate
+        expr: rate(fraud_predictions_total{prediction="fraud"}[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High fraud rate detected"
+          description: "Fraud rate is {{ $value }} which is above the threshold of 0.1"
+
+      - alert: APIResponseTime
+        expr: histogram_quantile(0.95, rate(api_request_duration_seconds_bucket[5m])) > 0.1
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "API response time is high"
+          description: "95th percentile response time is {{ $value }}s"
+
+      - alert: ModelPredictionErrors
+        expr: rate(model_prediction_errors_total[5m]) > 0.01
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High model prediction error rate"
+          description: "Model prediction error rate is {{ $value }}"
+
+      - alert: APIDown
+        expr: up{job="fraud-detection-api"} == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Fraud Detection API is down"
+          description: "The fraud detection API has been down for more than 30 seconds"
+
+      - alert: LowModelAccuracy
+        expr: model_accuracy < 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Model accuracy is low"
+          description: "Model accuracy is {{ $value }}, below threshold of 0.9"
